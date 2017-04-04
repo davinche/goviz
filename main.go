@@ -49,6 +49,11 @@ func main() {
 			Description: "send graphviz dot data to preview server",
 			Action:      send,
 		},
+		cli.Command{
+			Name:        "shutdown",
+			Description: "shutdown the preview server",
+			Action:      shutdown,
+		},
 	}
 
 	app.Run(os.Args)
@@ -73,6 +78,17 @@ func send(c *cli.Context) error {
 		return err
 	}
 	return sendData(data)
+}
+
+func shutdown(c *cli.Context) error {
+	client := http.Client{}
+	r, err := http.NewRequest("POST", "http://localhost:"+strconv.Itoa(port)+"/shutdown", nil)
+	if err != nil {
+		fmt.Printf("error: could not create http request: err=%q\n", err)
+		return err
+	}
+	client.Do(r)
+	return nil
 }
 
 func sendData(data []byte) error {

@@ -12,6 +12,7 @@ import (
 )
 
 var t *template.Template
+var srv http.Server
 
 func init() {
 	binDir, err := osext.ExecutableFolder()
@@ -27,6 +28,8 @@ func ListenAndServe(addr string) {
 
 	imagesMu := sync.Mutex{}
 	images := make(map[string][]byte)
+
+	srv = http.Server{Addr: addr}
 
 	http.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {
 		id := r.FormValue("id")
@@ -94,6 +97,11 @@ func ListenAndServe(addr string) {
 		imagesMu.Unlock()
 	})
 
+	http.HandleFunc("/shutdown", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		srv.Shutdown(nil)
+	})
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		id := r.FormValue("id")
 		if id == "" {
@@ -116,5 +124,5 @@ func ListenAndServe(addr string) {
 		}
 		t.ExecuteTemplate(w, "index.html", s)
 	})
-	http.ListenAndServe(addr, nil)
+	srv.ListenAndServe()
 }
