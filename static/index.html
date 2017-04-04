@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GoViz</title>
+</head>
+<style>
+  * { box-sizing: border-box; }
+  body { text-align: center; }
+</style>
+<body>
+  <img id="img">
+  <script>
+    window.onload = function() {
+      var img = document.getElementById('img');
+      var ws = new WebSocket('ws://{{.Host}}:{{.Port}}/connect?id={{.ID}}');
+      ws.binaryType = 'arraybuffer';
+      ws.onmessage = function(e) {
+        var bytes = new Uint8Array(e.data);
+        var binary = "";
+        for (var i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode( bytes[i] );
+        }
+        img.src = "data:image/png;base64," + window.btoa(binary);
+      };
+    };
+  </script>
+</body>
+</html>
