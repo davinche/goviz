@@ -3,6 +3,7 @@ package server
 import (
 	"html/template"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"sync"
@@ -37,6 +38,8 @@ func ListenAndServe(addr string) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+
+		log.Printf("/connect: id=%q\n", id)
 
 		handleWs := func(ws *websocket.Conn) {
 			mu.Lock()
@@ -74,7 +77,7 @@ func ListenAndServe(addr string) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
+		log.Printf("/generate: id=%q\n", id)
 		defer r.Body.Close()
 		img, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -108,6 +111,7 @@ func ListenAndServe(addr string) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		log.Printf("/home: id=%q\n", id)
 		host, port, err := net.SplitHostPort(r.Host)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -124,5 +128,5 @@ func ListenAndServe(addr string) {
 		}
 		t.ExecuteTemplate(w, "index.html", s)
 	})
-	srv.ListenAndServe()
+	log.Fatalf("error: could not listenandserve: err=%q\n", srv.ListenAndServe())
 }

@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 
 	"github.com/davinche/goviz/server"
@@ -15,6 +17,7 @@ import (
 var VERSION string
 var port int
 var id string
+var shouldLaunch bool
 
 func main() {
 	app := cli.NewApp()
@@ -34,6 +37,11 @@ func main() {
 			Value:       "",
 			Usage:       "the port for the preview server",
 			Destination: &id,
+		},
+		cli.BoolFlag{
+			Name:        "launch, l",
+			Usage:       "flag for launching in browser",
+			Destination: &shouldLaunch,
 		},
 	}
 
@@ -105,5 +113,31 @@ func sendData(data []byte) error {
 		fmt.Printf("error: could send http request; err=%q\n", err)
 		return err
 	}
+
+	if shouldLaunch {
+		launchBrowser(id)
+	}
 	return nil
+}
+
+func launchBrowser(id string) {
+	var args []string
+	switch runtime.GOOS {
+	case "darwin":
+		args = append(args, "open", "-g")
+		break
+	case "linux":
+		args = append(args, "xdg-open")
+		break
+	}
+
+	if len(args) == 0 {
+		log.Println("error: could not determine how to launch browser")
+		os.Exit(1)
+	}
+	args = append(args, "http://localhost:"+strconv.Itoa(port)+"?id="+id)
+	command := exec.Command(args[0], args[1:]...)
+	if err := command.Start(); err != nil {
+		log.Printf("error: could not launch browser: %v\n", err)
+	}
 }
